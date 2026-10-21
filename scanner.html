@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}URL Scanner | PhishNet AI Detection Engine{% endblock %}
+
+{% block content %}
+<div class="card scanner-card">
+  <div class="card-header-flex">
+    <div>
+      <h2 class="card-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2 4-4"/></svg>
+        Phishing URL Deep Inspection Scanner
+      </h2>
+      <p class="card-subtitle">Submit a web address to evaluate 15 cybersecurity heuristics and Random Forest ML features.</p>
+    </div>
+    <span class="badge badge-neutral">No Remote Fetch &bull; Safe Local Analysis</span>
+  </div>
+
+  <form action="{{ url_for('scan_url') }}" method="POST" class="scan-form">
+    <div class="input-group-custom">
+      <div class="input-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <input 
+        type="text" 
+        name="url" 
+        class="url-input-field" 
+        placeholder="Enter URL to analyze (e.g. https://paypal.com.attacker.xyz/login)..." 
+        required 
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+
+    <!-- Quick Test Scenarios -->
+    <div class="quick-samples">
+      <span style="font-weight: 600; color: #fff;">Test Scenarios:</span>
+      <span class="sample-chip" data-url="https://example.org/login">Standard HTTPS</span>
+      <span class="sample-chip" data-url="http://192.0.2.1/login">Direct IP Hostname</span>
+      <span class="sample-chip" data-url="https://example.com@evil.example">@ Symbol Spoofing</span>
+      <span class="sample-chip" data-url="https://paypal.com.account-update.xyz/login">Subdomain Brand Abuse</span>
+      <span class="sample-chip" data-url="https://xn--pypal-4ve.com/signin">Punycode Homograph</span>
+      <span class="sample-chip" data-url="https://trusted.org/redirect?dest=http://evil-tracker.org">Open Redirection</span>
+      <span class="sample-chip" data-url="http://banking-portal.top:2082/login">Unusual Port + Abused TLD</span>
+    </div>
+
+    <!-- Loading Animation -->
+    <div class="loading-indicator">
+      <div class="spinner"></div>
+      <p style="color: #fff; font-weight: 600; font-size: 0.95rem;">Performing heuristic feature extraction and ML inference...</p>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Safely examining URL lexical tokens without initiating outbound network connections.</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary btn-clear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        Clear Input
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2 4-4"/></svg>
+        Start Deep Analysis
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- 15 Features Explanation Card -->
+<div class="card">
+  <div class="card-header-flex">
+    <h3 class="card-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      What PhishNet AI Evaluates
+    </h3>
+    <span class="badge badge-neutral">15 Structural & Lexical Heuristics</span>
+  </div>
+
+  <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+    Every submitted URL is parsed locally into its constitutional components and evaluated against 15 cybersecurity rules designed to detect social engineering, obfuscation, and brand impersonation tactics:
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">1. URL Length Anomalies</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Detects excessive length used to hide phishing payload destinations.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">2. Dots in Hostname</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Measures domain segment fragmentation and deep nesting.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">3. Hyphens in Hostname</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Flags chained security buzzwords (e.g. secure-login-bank-auth).</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">4. Subdomain Hierarchy</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Extracts multi-level subdomains intended to deceive users on mobile viewports.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">5. Direct IP Hostnames</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Detects IPv4, IPv6, and obfuscated hexadecimal/decimal host targets.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">6. Userinfo '@' Spoofing</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Identifies embedded credential delimiters exploited in browser routing.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">7. Open Redirection Chains</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Checks for '//' in paths and secondary URLs injected into query parameters.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">8. Punycode & IDN Homographs</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Detects 'xn--' prefixes replacing Latin glyphs with lookalike scripts.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">9. Obfuscated URL Encoding</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Flags hex percent-encoding in hostnames or double-encoding (%25).</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">10. Inflated Query Strings</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Analyzes long serialized parameters carrying credential interception tokens.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">11. Non-Standard Ports</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Identifies high-numbered ports bypassing standard perimeter firewalls.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">12. HTTP Protocol Absence</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Warns of unencrypted plaintext channels without assuming HTTPS is safe.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">13. Sensitive Keyword Traps</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Scans for login, verify, invoice, banking, and security keywords in domains.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">14. Deceptive Brand Misalignment</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Flags target brands in subdomains when registered domain is unaffiliated.</p>
+    </div>
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong style="color: #fff; font-size: 0.9rem;">15. High-Abuse TLDs</strong>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Flags domain registries with statistically high malicious exploitation rates.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | PhishNet AI Phishing Detection Platform{% endblock %}
+
+{% block content %}
+<!-- Section A: Welcome Hero -->
+<div class="card welcome-hero">
+  <div class="hero-content">
+    <h2>Welcome to PhishNet AI</h2>
+    <p>Protect yourself from suspicious links with intelligent URL analysis.</p>
+    <div class="hero-meta">
+      <span><strong>Tagline:</strong> Detect Threats Before They Reach You.</span>
+      <span><strong>Architecture:</strong> Rule-Based Heuristics + Random Forest ML</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section B: URL Scanner Card -->
+<div class="card scanner-card">
+  <div class="card-header-flex">
+    <div>
+      <h3 class="card-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Instant URL Scanner
+      </h3>
+      <p class="card-subtitle">Intelligent URL Analysis and Phishing Risk Detection.</p>
+    </div>
+    <span class="badge badge-neutral">Local Safe Sandbox (No URL Visited)</span>
+  </div>
+
+  <form action="{{ url_for('scan_url') }}" method="POST" class="scan-form">
+    <div class="input-group-custom">
+      <div class="input-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <input 
+        type="text" 
+        name="url" 
+        class="url-input-field" 
+        placeholder="Enter URL to inspect (e.g., https://example.com or http://192.0.2.1/login)..." 
+        required 
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+
+    <!-- Quick Sample Links for Interview Demonstration -->
+    <div class="quick-samples">
+      <span>Quick Test Samples:</span>
+      <span class="sample-chip" data-url="https://example.org/login">example.org/login (Standard)</span>
+      <span class="sample-chip" data-url="http://192.0.2.1/login">192.0.2.1 (IP Host)</span>
+      <span class="sample-chip" data-url="https://example.com@evil.example">example.com@evil.example (@ Spoof)</span>
+      <span class="sample-chip" data-url="https://paypal.com.attacker-security-update.xyz/verify">paypal.com.attacker.xyz (Brand Impersonation)</span>
+    </div>
+
+    <!-- Loading Animation (shown when analysis is running) -->
+    <div class="loading-indicator">
+      <div class="spinner"></div>
+      <p style="color: #fff; font-weight: 600; font-size: 0.95rem;">Extracting lexical, structural, and behavioral signals...</p>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Parsing domain components and querying Random Forest classifier</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary btn-clear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        Clear
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2 4-4"/></svg>
+        Scan URL
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Section C: Statistics Cards -->
+<div class="stats-grid">
+  <!-- Total Analyzed -->
+  <div class="stat-card stat-primary">
+    <div class="stat-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_scans }}</span>
+      <span class="stat-label">Total URLs Analyzed</span>
+    </div>
+  </div>
+
+  <!-- High Risk URLs -->
+  <div class="stat-card stat-high">
+    <div class="stat-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.high_risk_count }}</span>
+      <span class="stat-label">High-Risk URLs (Score 60-100)</span>
+    </div>
+  </div>
+
+  <!-- Medium Risk URLs -->
+  <div class="stat-card stat-medium">
+    <div class="stat-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.medium_risk_count }}</span>
+      <span class="stat-label">Medium-Risk URLs (Score 30-59)</span>
+    </div>
+  </div>
+
+  <!-- Low Risk URLs -->
+  <div class="stat-card stat-low">
+    <div class="stat-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.low_risk_count }}</span>
+      <span class="stat-label">Low-Risk URLs (Score 0-29)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section E: Charts Section -->
+<div class="dashboard-visuals-grid">
+  <!-- Risk Distribution Chart -->
+  <div class="card chart-card">
+    <div class="card-header-flex">
+      <h4 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10h-10z"/></svg>
+        Risk Distribution
+      </h4>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Live Database Breakdown</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="riskDistributionChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Scan Trend -->
+  <div class="card chart-card">
+    <div class="card-header-flex">
+      <h4 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Recent Scan Risk Scores
+      </h4>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">Last 10 Analyzed Links</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="recentScoresChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Section D: Recent Scans Table -->
+<div class="card">
+  <div class="card-header-flex">
+    <div>
+      <h3 class="card-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Recent Scans
+      </h3>
+      <p class="card-subtitle">Real-time log of analyzed links stored in SQLite database</p>
+    </div>
+    {% if recent_scans %}
+      <a href="{{ url_for('history') }}" class="btn btn-secondary" style="font-size: 0.825rem; padding: 0.45rem 0.9rem;">
+        View All History &rarr;
+      </a>
+    {% endif %}
+  </div>
+
+  {% if recent_scans %}
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>URL / Hostname</th>
+            <th>Risk Level</th>
+            <th>Risk Score</th>
+            <th>ML Prediction</th>
+            <th>Scan Date</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in recent_scans %}
+            <tr>
+              <td class="url-cell" title="{{ scan.url }}">
+                <div style="font-weight: 600; color: #fff;">{{ scan.hostname }}</div>
+                <div style="color: var(--text-dim); font-size: 0.775rem;">{{ scan.url }}</div>
+              </td>
+              <td>
+                {% if scan.risk_level == 'High' %}
+                  <span class="badge badge-high">High Risk</span>
+                {% elif scan.risk_level == 'Medium' %}
+                  <span class="badge badge-medium">Medium Risk</span>
+                {% else %}
+                  <span class="badge badge-low">Low Risk</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-weight: 700; font-family: monospace; font-size: 1rem; color: {% if scan.risk_score >= 60 %}var(--risk-high){% elif scan.risk_score >= 30 %}var(--risk-medium){% else %}var(--risk-low){% endif %};">
+                  {{ scan.risk_score }}/100
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-neutral" style="font-family: monospace;">
+                  {{ scan.ml_prediction }}
+                </span>
+              </td>
+              <td style="color: var(--text-muted); font-size: 0.825rem;">
+                {{ scan.scanned_at }}
+              </td>
+              <td style="text-align: right;">
+                <a href="{{ url_for('results', scan_id=scan.id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                  View Details
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <!-- Helpful Empty State when database is empty -->
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h3>No URLs Analyzed Yet</h3>
+      <p>The database is currently empty. Use the scanner above to run your first cybersecurity link assessment.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

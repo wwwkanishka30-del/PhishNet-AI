@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PhishNet AI | Intelligent Phishing URL Detection & Cybersecurity Platform{% endblock %}</title>
+  
+  <!-- Favicon / Shield Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.54-3.14 8.78-7 9.87-3.86-1.09-7-5.33-7-9.87V6.3l7-3.12z'/></svg>">
+  
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-wrapper">
+        <svg class="brand-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6366f1" />
+              <stop offset="100%" stop-color="#06b6d4" />
+            </linearGradient>
+            <linearGradient id="innerGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 3L6 8V18C6 26.5 12 34 20 37C28 34 34 26.5 34 18V8L20 3Z" fill="url(#innerGlow)" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M14 20L18 24L26 15" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text">
+          <h1>PhishNet AI</h1>
+          <span class="version-tag">M.Tech CS</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li>
+          <a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('scanner') }}" class="nav-link {% if active_page == 'scanner' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2 4-4"/></svg>
+            <span>URL Scanner</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('history') }}" class="nav-link {% if active_page == 'history' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Scan History</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('threat_intelligence') }}" class="nav-link {% if active_page == 'threat_intelligence' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="1"/><path d="M12 7v1"/></svg>
+            <span>Threat Intelligence</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('about') }}" class="nav-link {% if active_page == 'about' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>About</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>Engine: Heuristics & ML</span>
+        </div>
+        <div>Local Analysis Mode &bull; Safe Sandbox</div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top Navbar (Mobile Hamburger) -->
+      <header class="top-navbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button id="sidebarToggle" class="menu-toggle-btn" aria-label="Toggle Navigation">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span style="font-weight: 700; color: #fff;">PhishNet AI</span>
+        </div>
+        <a href="{{ url_for('scanner') }}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Quick Scan</a>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="content-body">
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+      </main>
+
+      <!-- Modern Footer -->
+      <footer style="padding: 1.5rem 2.25rem; border-top: 1px solid var(--border-color); color: var(--text-dim); font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <strong>PhishNet AI</strong> &bull; Detect Threats Before They Reach You.
+        </div>
+        <div>
+          M.Tech Computer Science Portfolio Project &bull; Built with Flask, SQLite & Scikit-Learn
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

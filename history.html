@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History | PhishNet AI Detection Log{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header-flex" style="flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h2 class="card-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        URL Scan History
+      </h2>
+      <p class="card-subtitle">
+        Search, filter, and inspect past URL evaluations recorded in the local SQLite database.
+      </p>
+    </div>
+    
+    {% if history.scans %}
+      <form action="{{ url_for('clear_history_route') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear all scan history from the database? This action cannot be undone.');">
+        <button type="submit" class="btn btn-danger" style="font-size: 0.825rem; padding: 0.45rem 0.9rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Clear All History
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <form method="GET" action="{{ url_for('history') }}" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <div style="flex-grow: 1; min-width: 240px;" class="input-group-custom">
+      <div class="input-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+      <input 
+        type="text" 
+        name="q" 
+        value="{{ search }}" 
+        class="url-input-field" 
+        placeholder="Search by URL or hostname..."
+        style="padding: 0.5rem;"
+      >
+    </div>
+
+    <div style="min-width: 160px;">
+      <select name="risk" class="url-input-field" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.65rem 0.85rem; width: 100%; color: #fff;" onchange="this.form.submit()">
+        <option value="all" {% if risk_filter == 'all' %}selected{% endif %}>All Risk Levels</option>
+        <option value="high" {% if risk_filter == 'high' %}selected{% endif %}>High Risk Only</option>
+        <option value="medium" {% if risk_filter == 'medium' %}selected{% endif %}>Medium Risk Only</option>
+        <option value="low" {% if risk_filter == 'low' %}selected{% endif %}>Low Risk Only</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-secondary" style="padding: 0.65rem 1.25rem;">Filter</button>
+    {% if search or risk_filter != 'all' %}
+      <a href="{{ url_for('history') }}" class="btn btn-secondary" style="padding: 0.65rem 1rem;">Reset</a>
+    {% endif %}
+  </form>
+
+  <!-- History Table -->
+  {% if history.scans %}
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>URL / Hostname</th>
+            <th>Risk Level</th>
+            <th>Risk Score</th>
+            <th>ML Classifier</th>
+            <th>Scan Date & Time</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in history.scans %}
+            <tr>
+              <td style="color: var(--text-dim); font-family: monospace;">#{{ item.id }}</td>
+              <td class="url-cell" title="{{ item.url }}">
+                <div style="font-weight: 600; color: #fff;">{{ item.hostname }}</div>
+                <div style="color: var(--text-dim); font-size: 0.775rem;">{{ item.url }}</div>
+              </td>
+              <td>
+                {% if item.risk_level == 'High' %}
+                  <span class="badge badge-high">High Risk</span>
+                {% elif item.risk_level == 'Medium' %}
+                  <span class="badge badge-medium">Medium Risk</span>
+                {% else %}
+                  <span class="badge badge-low">Low Risk</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-weight: 700; font-family: monospace; font-size: 0.95rem; color: {% if item.risk_score >= 60 %}var(--risk-high){% elif item.risk_score >= 30 %}var(--risk-medium){% else %}var(--risk-low){% endif %};">
+                  {{ item.risk_score }}/100
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-neutral" style="font-family: monospace;">
+                  {{ item.ml_prediction }}
+                </span>
+              </td>
+              <td style="color: var(--text-muted); font-size: 0.825rem;">
+                {{ item.scanned_at }}
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <a href="{{ url_for('results', scan_id=item.id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.775rem; margin-right: 0.25rem;">
+                  View
+                </a>
+                <form action="{{ url_for('delete_scan_route', scan_id=item.id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Delete record #{{ item.id }}?');">
+                  <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.55rem; font-size: 0.775rem; color: var(--risk-high);" title="Delete Record">
+                    &times;
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if history.total_pages > 1 %}
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+          Showing Page <strong>{{ history.page }}</strong> of <strong>{{ history.total_pages }}</strong> ({{ history.total_count }} total entries)
+        </span>
+        <div style="display: flex; gap: 0.5rem;">
+          {% if history.has_prev %}
+            <a href="{{ url_for('history', page=history.page-1, q=search, risk=risk_filter) }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+              &larr; Previous
+            </a>
+          {% endif %}
+          {% if history.has_next %}
+            <a href="{{ url_for('history', page=history.page+1, q=search, risk=risk_filter) }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+              Next &rarr;
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m21 21-4.3-4.3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <h3>No Scan Records Found</h3>
+      <p>
+        {% if search or risk_filter != 'all' %}
+          No scans matched your search criteria ("{{ search }}", risk="{{ risk_filter }}").
+          <br><a href="{{ url_for('history') }}" style="color: var(--accent-cyan);">Clear filters</a> to view all.
+        {% else %}
+          Your scan history log is empty. Any URLs analyzed on the dashboard or scanner will be preserved here.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+  <!-- Data Privacy Disclosure -->
+  <div style="margin-top: 2rem; padding: 1rem; border-radius: var(--radius-sm); background: var(--bg-surface); font-size: 0.775rem; color: var(--text-dim); border: 1px solid var(--border-color);">
+    <strong>Data Privacy Notice:</strong> This instance records analyzed URL strings, computed risk scores, and extracted feature tokens locally in SQLite. It does not collect passwords, session cookies, or user identity tokens. Scan histories are shared across this local application instance.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{
+  "model_type": "RandomForestClassifier",
+  "n_estimators": 100,
+  "max_depth": 6,
+  "dataset_size": 100,
+  "train_samples": 80,
+  "test_samples": 20,
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "confusion_matrix": {
+      "true_negative": 10,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_positive": 10
+    }
+  },
+  "baseline_comparison": {
+    "logistic_regression_accuracy": 1.0,
+    "logistic_regression_f1": 1.0
+  },
+  "feature_importances": {
+    "has_suspicious_keyword": 0.2469,
+    "url_length": 0.2194,
+    "hyphen_count_host": 0.2099,
+    "hostname_length": 0.1023,
+    "is_https": 0.0966,
+    "subdomain_count": 0.0339,
+    "is_ip_host": 0.0278,
+    "dot_count_host": 0.0276,
+    "has_target_brand": 0.0172,
+    "path_length": 0.0158,
+    "has_at_symbol": 0.0019,
+    "query_length": 0.0007
+  },
+  "features": [
+    "url_length",
+    "hostname_length",
+    "dot_count_host",
+    "hyphen_count_host",
+    "has_at_symbol",
+    "is_ip_host",
+    "is_https",
+    "subdomain_count",
+    "path_length",
+    "query_length",
+    "has_suspicious_keyword",
+    "has_target_brand"
+  ]
+}

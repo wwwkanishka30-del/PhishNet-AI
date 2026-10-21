@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}URL Analysis Report: {{ scan.hostname }} | PhishNet AI{% endblock %}
+
+{% block content %}
+<!-- Top Header & Actions -->
+<div class="card results-header-card">
+  <div class="card-header-flex" style="flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge {% if scan.risk_level == 'High' %}badge-high{% elif scan.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}">
+        {{ scan.risk_level }} Risk Evaluation
+      </span>
+      <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-top: 0.5rem; word-break: break-all;">
+        {{ scan.url }}
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+        Scanned at: <strong>{{ scan.scanned_at }} UTC</strong> &bull; Record ID: #{{ scan.id }}
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <button class="btn btn-secondary btn-copy" data-copy="PhishNet AI Scan Report:&#10;URL: {{ scan.url }}&#10;Hostname: {{ scan.hostname }}&#10;Risk Score: {{ scan.risk_score }}/100 ({{ scan.risk_level }} Risk)&#10;ML Prediction: {{ scan.ml_prediction }} ({{ (scan.ml_confidence * 100)|round(1) }}% confidence)&#10;Detected Signals: {{ scan.signals_count }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Report
+      </button>
+      <a href="{{ url_for('scanner') }}" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Scan Another URL
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Main Results Grid: Score Gauge + Signals & Components -->
+<div class="results-grid">
+  
+  <!-- Left Column: Risk Score Gauge & Machine Learning Verdict -->
+  <div>
+    <!-- Gauge Card -->
+    <div class="card score-display-card">
+      <h3 style="font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+        Calculated Risk Score
+      </h3>
+
+      <!-- Circular SVG Gauge -->
+      <div class="gauge-wrapper">
+        <svg class="gauge-svg" viewBox="0 0 100 100">
+          <circle class="gauge-bg" cx="50" cy="50" r="42" />
+          <circle 
+            class="gauge-progress" 
+            cx="50" 
+            cy="50" 
+            r="42" 
+            stroke="{% if scan.risk_score >= 60 %}#ef4444{% elif scan.risk_score >= 30 %}#f59e0b{% else %}#10b981{% endif %}"
+            stroke-dasharray="263.89"
+            stroke-dashoffset="{{ 263.89 - (263.89 * scan.risk_score / 100) }}"
+          />
+        </svg>
+        <div class="gauge-center-text">
+          <span class="gauge-number" style="color: {% if scan.risk_score >= 60 %}#ef4444{% elif scan.risk_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+            {{ scan.risk_score }}
+          </span>
+          <span class="gauge-label">out of 100</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 0.5rem; text-align: center;">
+        <span class="badge {% if scan.risk_level == 'High' %}badge-high{% elif scan.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+          {{ scan.risk_level }} Risk Level
+        </span>
+        <p style="color: var(--text-dim); font-size: 0.775rem; margin-top: 0.6rem;">
+          Score Range: 0–29 Low &bull; 30–59 Medium &bull; 60–100 High
+        </p>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); width: 100%; margin: 1.5rem 0;">
+
+      <!-- Machine Learning Verdict Extension -->
+      <div style="width: 100%; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span style="font-size: 0.825rem; font-weight: 600; color: #fff;">Random Forest ML Classifier:</span>
+          <span class="badge {% if scan.ml_prediction == 'Phishing' %}badge-high{% elif scan.ml_prediction == 'Legitimate' %}badge-low{% else %}badge-neutral{% endif %}">
+            {{ scan.ml_prediction }}
+          </span>
+        </div>
+        <div style="background: var(--bg-primary); border-radius: 4px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 0.4rem;">
+          <div style="background: {% if scan.ml_prediction == 'Phishing' %}var(--risk-high){% else %}var(--risk-low){% endif %}; height: 100%; width: {{ (scan.ml_confidence * 100)|round(0) }}%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim);">
+          <span>Confidence:</span>
+          <strong style="color: var(--text-main);">{{ (scan.ml_confidence * 100)|round(1) }}%</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation / Help Card -->
+    <div class="card" style="font-size: 0.85rem; color: var(--text-muted);">
+      <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem;">Heuristic Engine Methodology</h4>
+      <p>
+        The risk score is calculated using 15 weighted cybersecurity rules. Signals assess lexical tokens, authority structure, obfuscation attempts, and brand impersonation tactics.
+      </p>
+      <div style="margin-top: 1rem;">
+        <a href="{{ url_for('threat_intelligence') }}" style="color: var(--accent-cyan); text-decoration: none;">
+          Learn about phishing evasion techniques &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Recommendation, Detected Signals, and Components Breakdown -->
+  <div>
+    <!-- Actionable Recommendation Box -->
+    <div class="recommendation-banner {% if scan.risk_level == 'High' %}risk-high{% elif scan.risk_level == 'Medium' %}risk-medium{% else %}risk-low{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        {% if scan.risk_level == 'High' %}
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        {% elif scan.risk_level == 'Medium' %}
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        {% else %}
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+        {% endif %}
+      </svg>
+      <div>
+        <strong style="display: block; font-size: 0.95rem; margin-bottom: 0.2rem;">
+          {% if scan.risk_level == 'High' %}High Risk Detected &bull; Critical Action Required{% elif scan.risk_level == 'Medium' %}Moderate Risk Detected &bull; Proceed With Caution{% else %}Safety Inspection Summary{% endif %}
+        </strong>
+        <p style="font-size: 0.875rem; margin: 0; line-height: 1.5;">
+          {{ scan.recommendation }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Detected Signals Section -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h3 class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Detected Risk Signals ({{ scan.signals_count }})
+        </h3>
+        <span class="badge badge-neutral">Signal Breakdown</span>
+      </div>
+
+      {% if scan.signals %}
+        {% for signal in scan.signals %}
+          <div class="signal-item severity-{{ signal.severity }}">
+            <div class="signal-title-row">
+              <span class="signal-title">
+                {% if signal.severity == 'high' %}
+                  <span style="color: var(--risk-high);">&#9679;</span>
+                {% elif signal.severity == 'medium' %}
+                  <span style="color: var(--risk-medium);">&#9679;</span>
+                {% else %}
+                  <span style="color: var(--risk-low);">&#9679;</span>
+                {% endif %}
+                {{ signal.title }}
+              </span>
+              <span class="signal-points" style="color: {% if signal.severity == 'high' %}var(--risk-high){% elif signal.severity == 'medium' %}var(--risk-medium){% else %}var(--risk-low){% endif %};">
+                +{{ signal.score_impact }} pts
+              </span>
+            </div>
+            <p class="signal-explanation">{{ signal.explanation }}</p>
+            <div class="signal-tech">Technical Context: {{ signal.technical_details }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <!-- Zero Signals State -->
+        <div style="background: var(--risk-low-bg); border: 1px solid var(--risk-low-border); padding: 1.5rem; border-radius: var(--radius-md); text-align: center;">
+          <p style="color: #6ee7b7; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">
+            No major suspicious URL indicators were detected by this scanner.
+          </p>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">
+            This does not guarantee that the destination website is safe. Phishers frequently register new legitimate-looking domains or compromise trusted sites.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Parsed Components Architecture Breakdown -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h3 class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          URL Component Breakdown & Lexical Architecture
+        </h3>
+        <span class="badge badge-neutral">RFC 3986 Normalization</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table" style="font-size: 0.85rem;">
+          <tbody>
+            <tr>
+              <th style="width: 220px;">Normalized Hostname</th>
+              <td style="font-family: monospace; color: var(--accent-cyan); font-weight: 600;">{{ scan.hostname }}</td>
+            </tr>
+            <tr>
+              <th>Registered Domain</th>
+              <td style="font-family: monospace;">{{ scan.components.registered_domain|default(scan.hostname) }}</td>
+            </tr>
+            <tr>
+              <th>Subdomain Hierarchy</th>
+              <td style="font-family: monospace;">{{ scan.components.subdomain|default("(None)") }}</td>
+            </tr>
+            <tr>
+              <th>Protocol Scheme</th>
+              <td style="font-family: monospace;">
+                {{ scan.components.scheme|upper }}
+                {% if scan.components.scheme == 'http' %}
+                  <span style="color: var(--risk-high); font-size: 0.75rem; margin-left: 6px;">(Plaintext &bull; No TLS)</span>
+                {% else %}
+                  <span style="color: var(--risk-low); font-size: 0.75rem; margin-left: 6px;">(TLS Encrypted)</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>Port</th>
+              <td style="font-family: monospace;">{{ scan.components.port }}</td>
+            </tr>
+            <tr>
+              <th>Path</th>
+              <td style="font-family: monospace; word-break: break-all;">{{ scan.components.path }}</td>
+            </tr>
+            <tr>
+              <th>Query Parameters</th>
+              <td style="font-family: monospace; word-break: break-all;">{{ scan.components.query }}</td>
+            </tr>
+            <tr>
+              <th>Lexical Metrics</th>
+              <td>
+                <span style="margin-right: 1rem;">Total Length: <strong>{{ scan.components.url_length }} chars</strong></span>
+                <span style="margin-right: 1rem;">Dots in Host: <strong>{{ scan.components.dot_count }}</strong></span>
+                <span>Hyphens in Host: <strong>{{ scan.components.hyphen_count }}</strong></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -10,6 +10,7 @@ and an interactive modern dashboard.
 import os
 import time
 from collections import defaultdict
+import jinja2
 from flask import (
     Flask,
     flash,
@@ -24,8 +25,37 @@ import database
 import detector
 import ml_classifier
 
-# Initialize Flask application
-app = Flask(__name__)
+# Resolve absolute paths to guarantee templates and static files load in any environment (Local & Cloud/Render)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+# Multi-directory search paths for templates (handles root directory or nested subfolder deployments)
+_CANDIDATE_TEMPLATE_DIRS = [
+    TEMPLATE_DIR,
+    os.path.join(os.getcwd(), "templates"),
+    os.path.join(os.getcwd(), "phishnet-ai", "templates"),
+    os.path.join(BASE_DIR, "templates"),
+    os.path.join(os.path.dirname(BASE_DIR), "templates"),
+    os.path.join(os.path.dirname(BASE_DIR), "phishnet-ai", "templates"),
+]
+_VALID_TEMPLATE_DIRS = []
+for _d in _CANDIDATE_TEMPLATE_DIRS:
+    _abs_d = os.path.abspath(_d)
+    if os.path.isdir(_abs_d) and _abs_d not in _VALID_TEMPLATE_DIRS:
+        _VALID_TEMPLATE_DIRS.append(_abs_d)
+
+# Initialize Flask application with explicit template and static paths
+app = Flask(
+    __name__,
+    template_folder=TEMPLATE_DIR,
+    static_folder=STATIC_DIR
+)
+
+# Attach multi-path FileSystemLoader so Jinja never raises TemplateNotFound
+if _VALID_TEMPLATE_DIRS:
+    app.jinja_loader = jinja2.FileSystemLoader(_VALID_TEMPLATE_DIRS)
+
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "phishnet-ai-portfolio-secret-key-2026")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16 KB max payload to prevent payload flooding
 
@@ -259,12 +289,13 @@ def server_error(e):
 
 
 if __name__ == "__main__":
-    # Built-in Flask development server
+    # Built-in Flask development server (for local testing & containerized environments)
+    host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 5000))
-    debug_mode = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1")
+    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() in ("true", "1")
     print(f"\n=======================================================")
     print(f"  PhishNet AI - Phishing URL Detection Platform")
-    print(f"  Running locally at: http://127.0.0.1:{port}")
-    print(f"  Environment: Development (Built-in Flask WSGI)")
+    print(f"  Running at: http://{host}:{port}")
+    print(f"  Environment: {'Development' if debug_mode else 'Production/Cloud'}")
     print(f"=======================================================\n")
-    app.run(host="127.0.0.1", port=port, debug=debug_mode)
+    app.run(host=host, port=port, debug=debug_mode)
